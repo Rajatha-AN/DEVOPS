@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: "2026-09-25T17:30:36Z"
+  labels:
+    run: hello-k8s
+  name: hello-k8s
+  namespace: default
+  resourceVersion: "551"
+  uid: 3d387d57-826d-4fe1-bdd1-ae0369e904e0
+spec:
+  clusterIP: 10.102.198.12
+  clusterIPs:
+  - 10.102.198.12
+  externalTrafficPolicy: Cluster
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - nodePort: 32485
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    run: hello-k8s
+  sessionAffinity: None
+  type: NodePort
+status:
+  loadBalancer: {}

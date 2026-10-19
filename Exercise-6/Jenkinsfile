@@ -1,0 +1,100 @@
+pipeline {
+    agent any
+
+    stages {
+
+        stage('Pre-check Docker') {
+            steps {
+                sh 'docker --version'
+                sh 'docker info'
+            }
+        }
+
+        stage('Setup Workspace') {
+            steps {
+                sh '''
+                    echo "Checking Exercise-6 files..."
+                    ls -la
+                '''
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t delivery_metrics .'
+            }
+        }
+
+        stage('Run Application') {
+            steps {
+                sh '''
+                    docker rm -f delivery_metrics 2>/dev/null || true
+
+                    docker run -d \
+                        --name delivery_metrics \
+                        -p 8000:8000 \
+                        delivery_metrics
+                '''
+            }
+        }
+
+        stage('Run Prometheus & Grafana') {
+            steps {
+                sh '''
+                    # Remove previous containers if they exist
+                    docker rm -f prometheus 2>/dev/null || true
+                    docker rm -f grafana 2>/dev/null || true
+
+                    # Create Prometheus container without mounting Jenkins workspace
+                    docker create \
+                        --name prometheus \
+                        -p 9090:9090 \
+                        prom/prometheus
+
+                    # Copy configuration files into the container
+                    docker cp prometheus.yml \
+                        prometheus:/etc/prometheus/prometheus.yml
+
+                    docker cp alert_rules.yml \
+                        prometheus:/etc/prometheus/alert_rules.yml
+
+                    # Start Prometheus
+                    docker start prometheus
+
+                    # Start Grafana
+                    docker run -d \
+                        --name grafana \
+                        -p 3000:3000 \
+                        grafana/grafana
+                '''
+            }
+        }
+
+        stage('Verify Services') {
+            steps {
+                sh '''
+                    echo "Running containers:"
+                    docker ps
+
+                    echo ""
+                    echo "Delivery Metrics: http://localhost:8000/metrics"
+                    echo "Prometheus: http://localhost:9090"
+                    echo "Grafana: http://localhost:3000"
+
+                    echo ""
+                    echo "Testing Delivery Metrics..."
+                    sleep 5
+                    docker ps --filter name=delivery_metrics
+
+                    echo ""
+                    echo "Testing Prometheus..."
+                    docker ps --filter name=prometheus
+
+                    echo ""
+                    echo "Testing Grafana..."
+                    docker ps --filter name=grafana
+                '''
+            }
+        }
+    }
+}

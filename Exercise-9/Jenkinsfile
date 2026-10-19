@@ -7,8 +7,8 @@ pipeline {
             steps {
                 echo 'Creating virtual environment and installing dependencies...'
                 sh '''
-                    cd python-flask-app
-                    python3 -m pip install -r requirements.txt
+                    cd ${WORKSPACE}/Exercise-9
+                    python3 -m pip install -r python-flask-app/requirements.txt
                 '''
             }
         }
@@ -17,8 +17,8 @@ pipeline {
             steps {
                 echo 'Running tests...'
                 sh '''
-                    cd python-flask-app
-                    python3 -m unittest discover -s .
+                    cd ${WORKSPACE}/Exercise-9
+                    python3 -m unittest discover -s python-flask-app
                 '''
             }
         }
@@ -27,8 +27,9 @@ pipeline {
             steps {
                 echo 'Deploying application...'
                 sh '''
-                    mkdir -p ${WORKSPACE}/python-app-deploy
-                    cp ${WORKSPACE}/python-flask-app/app.py ${WORKSPACE}/python-app-deploy/
+                    mkdir -p ${WORKSPACE}/Exercise-9/python-app-deploy
+                    cp ${WORKSPACE}/Exercise-9/python-flask-app/app.py \
+                       ${WORKSPACE}/Exercise-9/python-app-deploy/
                 '''
             }
         }
@@ -37,8 +38,11 @@ pipeline {
             steps {
                 echo 'Running application...'
                 sh '''
-                    nohup python3 ${WORKSPACE}/python-app-deploy/app.py > ${WORKSPACE}/python-app-deploy/app.log 2>&1 &
-                    echo $! > ${WORKSPACE}/python-app-deploy/app.pid
+                    nohup python3 \
+                    ${WORKSPACE}/Exercise-9/python-app-deploy/app.py \
+                    > ${WORKSPACE}/Exercise-9/python-app-deploy/app.log 2>&1 &
+
+                    echo $! > ${WORKSPACE}/Exercise-9/python-app-deploy/app.pid
                 '''
             }
         }
@@ -47,8 +51,8 @@ pipeline {
             steps {
                 echo 'Testing application...'
                 sh '''
-                    cd python-flask-app
-                    python3 test_app.py
+                    cd ${WORKSPACE}/Exercise-9
+                    python3 python-flask-app/test_app.py
                 '''
             }
         }
